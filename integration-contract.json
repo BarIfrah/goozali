@@ -1,0 +1,24 @@
+{
+  "hashTabs": [
+    "jobs",
+    "candidates",
+    "companies",
+    "salary",
+    "groups",
+    "help"
+  ],
+  "domAnchors": {
+    "header": "#gzl-header",
+    "hero": "#gzl-hero",
+    "intro": "#gzl-intro",
+    "tabsHost": "#gzl-tabs",
+    "tabbar": "#gzl-tabbar",
+    "panels": "#gzl-panels"
+  },
+  "events": {
+    "tabChange": "URL hash changes to #tab=<key> (no scroll)"
+  },
+  "formsOpenInModal": true,
+  "iframesLazy": true,
+  "configFile": "assets/app.js (const TABS)"
+}
