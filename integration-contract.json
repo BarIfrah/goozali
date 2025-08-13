@@ -10,7 +10,6 @@
   "domAnchors": {
     "header": "#gzl-header",
     "hero": "#gzl-hero",
-    "intro": "#gzl-intro",
     "tabsHost": "#gzl-tabs",
     "tabbar": "#gzl-tabbar",
     "panels": "#gzl-panels"

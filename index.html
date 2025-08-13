@@ -9,19 +9,18 @@
     <link rel="stylesheet" href="./assets/app.css" />
   </head>
   <body>
+    <!-- Legacy hash anchors (compat) -->
+    <div id="headdjobopening" hidden></div>
+
     <!-- Header -->
     <header class="header" id="gzl-header">
       <div class="c">
         <div class="row">
-          <div class="brand"><img src="./assets/chick.svg" class="logo" alt="" aria-hidden="true"/> Goozali</div>
-          <nav class="nav" aria-label="ראשי">
-            <a href="#tab=jobs">משרות</a>
-            <a href="#tab=candidates">מחפשי עבודה</a>
-            <a href="#tab=companies">חברות</a>
-            <a href="#tab=salary">שכר</a>
-            <a href="#tab=groups">קבוצות</a>
-            <a href="#tab=help">עזרה</a>
-          </nav>
+          <div class="brand">
+            <img src="./assets/chick.svg" class="logo" alt="" aria-hidden="true"/>
+            Goozali
+          </div>
+          <nav class="nav" aria-label="ראשי"><!-- hidden by CSS to avoid duplication --></nav>
         </div>
       </div>
     </header>
@@ -30,41 +29,34 @@
     <section class="hero" id="gzl-hero">
       <div class="c">
         <h1>הבית של רשימות ההייטק השימושיות—בממשק נקי ונוח</h1>
-        <p>משרות, חברות, טווחי שכר וקהילות. כתיבת קו״ח וקבלת נוטיפיקציות—הכל מפה.</p>
+        <p>משרות, חברות, טווחי שכר וקהילות—הכל מפה.</p>
         <div class="cta">
           <a class="btn btn--light" href="#tab=jobs">מצא/י משרה</a>
-          <a class="btn btn--dark" href="#tab=groups">קבל/י נוטיפיקציות</a>
+          <a class="btn btn--dark" href="#tab=groups" id="gzl-notif-cta">קבל/י נוטיפיקציות</a>
+          <a class="btn btn--accent" href="https://www.tech-cv.com/?lang=he" target="_blank" rel="noopener">צור/י קו״ח ב‑tech‑cv</a>
         </div>
       </div>
     </section>
 
-    <!-- Intro -->
-    <section class="intro c" id="gzl-intro">
-      <p>
-        <strong>מה האתר עושה?</strong>
-        מרכז קישורים שימושיים להייטק: משרות, מאגר חברות, טווחי שכר וקהילות.
-        ליצירת קורות חיים השתמשו ב־
-        <a href="https://www.tech-cv.com/?lang=he" target="_blank" rel="noopener"><u>tech‑cv.com</u></a>.
-        עמוד זה הוא דף נחיתה; התכנים המלאים זמינים בכל כרטיסיה למטה.
-      </p>
-    </section>
-
-    <!-- Tabs host -->
+    <!-- Tabs -->
     <section class="tabs c" id="gzl-tabs">
       <div class="tabbar" id="gzl-tabbar" role="tablist" aria-label="כרטיסיות תוכן"></div>
-      <div class="panels" id="gzl-panels" style="display:grid;gap:16px;margin-top:10px"></div>
+      <div class="panels" id="gzl-panels"></div>
     </section>
 
-    <!-- Modal for forms -->
+    <!-- Modal -->
     <div class="backdrop" id="gzl-backdrop" style="display:none" aria-hidden="true">
       <div class="modal" role="dialog" aria-labelledby="gzlModalTitle">
         <div class="mhd">
-          <strong id="gzlModalTitle">טופס</strong>
+          <div class="mhdt">
+            <img src="./assets/chick.svg" alt="" class="mh-logo" aria-hidden="true"/>
+            <strong id="gzlModalTitle">טופס</strong>
+          </div>
           <button class="x" aria-label="סגור" id="gzl-close">✕</button>
         </div>
         <div class="mbd">
           <iframe class="miframe" id="gzl-miframe" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-          <p class="note">אם הטופס לא נטען, <a id="gzl-fallback" href="#" target="_blank" rel="noopener">פתח/י בטאב חדש</a>.</p>
+          <p class="note"><a id="gzl-fallback" href="#" target="_blank" rel="noopener">פתח בטאב חדש</a></p>
         </div>
       </div>
     </div>
