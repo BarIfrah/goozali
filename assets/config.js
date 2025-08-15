@@ -116,5 +116,102 @@ export const STRINGS = {
     },
 };
 
+// === Telegram groups for notifications (modal) ===
+export const NOTIF_GROUPS = {
+    he: [
+        {
+            title: "משרות ג׳וניור",
+            links: [
+                { label: "משרות ג׳וניור ללא ניסיון קודם", href: "https://t.me/hitechjobsjunior" },
+            ]
+        },
+        {
+            title: "לפי אזור גיאוגרפי",
+            links: [
+                { label: "משרות היי טק בירושלים והסביבה", href: "https://t.me/hitechjobsJerusalem" },
+                { label: "משרות היי טק בצפון הארץ", href: "https://t.me/+YAPhl9UVzodhODBk" },
+                { label: "משרות היי טק בדרום הארץ", href: "https://t.me/+xAIG_AuF_yY0Yjhk" },
+            ]
+        },
+        {
+            title: "לפי תחום",
+            links: [
+                { label: "משרות הנדסת תוכנה", href: "https://t.me/hitechjobsisrael" },
+                { label: "AI / Data Science / ML / Algo", href: "https://t.me/hitechjobsdatascience" },
+                { label: "Data Analyst", href: "https://t.me/hitechjobsdata" },
+                { label: "Frontend פיתוח פרונטאנד", href: "https://t.me/+CwDWQuAZC_owODc0" },
+                { label: "Mobile Dev מובייל", href: "https://t.me/+5nK1fQiqLO1iZDI0" },
+                { label: "DevOps", href: "https://t.me/+qm6-8JjvLP1jNTM0" },
+                { label: "QA", href: "https://t.me/hitechjobsQA" },
+                { label: "Low Level / Firmware / Embedded", href: "https://t.me/+4CQf4ZSW2G1lMmZk" },
+                { label: "Hardware הנדסת חומרה", href: "https://t.me/hitechjobshardware" },
+                { label: "Mechanical / Systems Eng", href: "https://t.me/+QRH1Im0COLdkOGE0" },
+                { label: "System Eng הנדסת מכונות", href: "https://t.me/+HWGyk6VEScc1Y2E0" },
+                { label: "Sales מכירות", href: "https://t.me/hitechjobsales" },
+                { label: "Customer Success", href: "https://t.me/+GCaUjq-Fkuw2OGY8" },
+                { label: "Cyber", href: "https://t.me/+qZBZ8YNwfPMxODI0" },
+                { label: "IT / System", href: "https://t.me/+s_qhgZ45yDZiNGY0" },
+                { label: "UI/UX ועיצוב", href: "https://t.me/+Q0phrVEqMpo3ODg8" },
+                { label: "Product ניהול מוצר", href: "https://t.me/hitechjobsproduct" },
+                { label: "Operations", href: "https://t.me/+nKYMWNw8IR04ODU0" },
+                { label: "Marketing שיווק", href: "https://t.me/hitechjobsmarketing" },
+                { label: "HR / גיוס", href: "https://t.me/+CQFAUrZZ65UxYjFk" },
+                { label: "Project Mgmt ניהול פרויקטים", href: "https://t.me/+CSl_I8hQADIwYzA8" },
+                { label: "Finance כספים", href: "https://t.me/+u9NEOqtvK7A0OWU0" },
+                { label: "C‑Level", href: "https://t.me/+e8hWNiEWn5NmZDU0" },
+                { label: "BizDev פיתוח עסקי", href: "https://t.me/+k1pq84oBHe45Yjg0" },
+                { label: "Compliance / Legal", href: "https://t.me/+UJj1drtpFmcwMTE0" },
+            ]
+        }
+    ],
+
+    en: [
+        {
+            title: "Junior roles",
+            links: [
+                { label: "Junior — no prior experience", href: "https://t.me/hitechjobsjunior" },
+            ]
+        },
+        {
+            title: "By region",
+            links: [
+                { label: "Jerusalem & area", href: "https://t.me/hitechjobsJerusalem" },
+                { label: "North Israel", href: "https://t.me/+YAPhl9UVzodhODBk" },
+                { label: "South Israel", href: "https://t.me/+xAIG_AuF_yY0Yjhk" },
+            ]
+        },
+        {
+            title: "By domain",
+            links: [
+                { label: "Software Engineering", href: "https://t.me/hitechjobsisrael" },
+                { label: "AI / Data Science / ML / Algo", href: "https://t.me/hitechjobsdatascience" },
+                { label: "Data Analyst", href: "https://t.me/hitechjobsdata" },
+                { label: "Frontend", href: "https://t.me/+CwDWQuAZC_owODc0" },
+                { label: "Mobile Dev", href: "https://t.me/+5nK1fQiqLO1iZDI0" },
+                { label: "DevOps", href: "https://t.me/+qm6-8JjvLP1jNTM0" },
+                { label: "QA", href: "https://t.me/hitechjobsQA" },
+                { label: "Low Level / Firmware / Embedded", href: "https://t.me/+4CQf4ZSW2G1lMmZk" },
+                { label: "Hardware", href: "https://t.me/hitechjobshardware" },
+                { label: "Mechanical / Systems Eng", href: "https://t.me/+QRH1Im0COLdkOGE0" },
+                { label: "System Eng", href: "https://t.me/+HWGyk6VEScc1Y2E0" },
+                { label: "Sales", href: "https://t.me/hitechjobsales" },
+                { label: "Customer Success", href: "https://t.me/+GCaUjq-Fkuw2OGY8" },
+                { label: "Cyber", href: "https://t.me/+qZBZ8YNwfPMxODI0" },
+                { label: "IT / System", href: "https://t.me/+s_qhgZ45yDZiNGY0" },
+                { label: "UI/UX & Design", href: "https://t.me/+Q0phrVEqMpo3ODg8" },
+                { label: "Product Management", href: "https://t.me/hitechjobsproduct" },
+                { label: "Operations", href: "https://t.me/+nKYMWNw8IR04ODU0" },
+                { label: "Marketing", href: "https://t.me/hitechjobsmarketing" },
+                { label: "HR / Recruiting", href: "https://t.me/+CQFAUrZZ65UxYjFk" },
+                { label: "Project Management", href: "https://t.me/+CSl_I8hQADIwYzA8" },
+                { label: "Finance", href: "https://t.me/+u9NEOqtvK7A0OWU0" },
+                { label: "C‑Level", href: "https://t.me/+e8hWNiEWn5NmZDU0" },
+                { label: "BizDev", href: "https://t.me/+k1pq84oBHe45Yjg0" },
+                { label: "Compliance / Legal", href: "https://t.me/+UJj1drtpFmcwMTE0" },
+            ]
+        }
+    ]
+};
+
 // סדר קבוע של הכרטיסיות (כדי שלא יזוזו בשינוי שפה)
 export const TAB_ORDER = ["help","helpers","groups","salary","companies","candidates","jobs"];

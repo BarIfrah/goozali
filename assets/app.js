@@ -1,4 +1,4 @@
-import { EMBEDS, FORMS, STRINGS, TAB_ORDER } from "./config.js";
+import { EMBEDS, FORMS, STRINGS, TAB_ORDER, NOTIF_GROUPS } from "./config.js"
 
 if (!window.__GZL_INIT__) {
     window.__GZL_INIT__ = true;
@@ -296,10 +296,25 @@ if (!window.__GZL_INIT__) {
     // CTA של נוטיפיקציות — כרגע מודאל טקסט פשוט (נוסיף רשימות טלגרם כשנרצה)
     $("#gzl-notif-cta")?.addEventListener("click",(e)=>{
         e.preventDefault();
-        openHtml(S.cta_notif, ()=> {
-            const d = document.createElement("div");
-            d.innerHTML = `<p>${S.cta_notif}</p>`;
-            return d;
+        const groups = NOTIF_GROUPS[ (document.documentElement.getAttribute("lang")==="en") ? "en" : "he" ] || [];
+        openHtml(STRINGS[(document.documentElement.getAttribute("lang")==="en") ? "en" : "he"].cta_notif, ()=>{
+            const root = document.createElement("div");
+            root.className = "notif-groups";
+            groups.forEach(section=>{
+                const h = document.createElement("h4");
+                h.textContent = section.title;
+                const chips = document.createElement("div");
+                chips.className = "chips";
+                section.links.forEach(l=>{
+                    const a = document.createElement("a");
+                    a.href = l.href; a.target = "_blank"; a.rel = "noopener";
+                    a.textContent = l.label;
+                    chips.appendChild(a);
+                });
+                root.appendChild(h);
+                root.appendChild(chips);
+            });
+            return root;
         });
     });
 }
