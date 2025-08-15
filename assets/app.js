@@ -1,38 +1,32 @@
-// לוגיקה בלבד. קישורים/טקסטים ב-config.js
-import { TABS, EMBED_OVERRIDES, HASH_FORMS, HASH_FORMS_BY_LANG, STRINGS } from "./config.js";
+import { EMBEDS, FORMS, STRINGS, TAB_ORDER } from "./config.js";
 
-if (window.__GZL_INIT__) {
-    // מונע Init כפול אם הסקריפט נטען פעמיים
-} else {
+if (!window.__GZL_INIT__) {
     window.__GZL_INIT__ = true;
 
-    let CURRENT_STRINGS = STRINGS.he;
-
-    /* ---------- Utils ---------- */
     const $  = (s, r=document)=>r.querySelector(s);
     const $$ = (s, r=document)=>[...r.querySelectorAll(s)];
-    const normalizeEmbeds = (embeds)=> (embeds||[]).map(e=> typeof e==="string" ? ({label:"View",url:e}) : e);
 
-    // המרה בטוחה ל-iframe: Airtable → /embed/… + כיבוי viewControls בטבלאות
     function toEmbed(u){
         try{
             const x = new URL(u);
             if (x.hostname.includes("airtable.com")){
-                const isAirtablePath = x.pathname.startsWith("/shr") || x.pathname.startsWith("/app") || x.pathname.startsWith("/embed");
-                if (isAirtablePath && !x.pathname.startsWith("/embed")){
-                    x.pathname = "/embed" + x.pathname;
-                }
-                // לכבות viewControls רק בטבלאות (appe…); לא בטפסים
+                const isA = x.pathname.startsWith("/shr") || x.pathname.startsWith("/app") || x.pathname.startsWith("/embed");
+                if (isA && !x.pathname.startsWith("/embed")) x.pathname = "/embed" + x.pathname;
                 if (!x.searchParams.has("viewControls") && /\/embed\/app[e]/.test(x.pathname)){
                     x.searchParams.set("viewControls","off");
                 }
                 return x.toString();
             }
-            return u;
-        }catch{ return u; }
+        }catch{}
+        return u;
     }
 
-    /* ---------- Modal ---------- */
+    // ---------- State ----------
+    let lang = initLang();                // "he" | "en"
+    let S    = STRINGS[lang];
+    const registry = new Map();           // key -> {btn,panel}
+
+    // ---------- Modal ----------
     const backdrop  = $("#gzl-backdrop");
     const modal     = backdrop.querySelector(".modal");
     const mframe    = $("#gzl-miframe");
@@ -40,33 +34,25 @@ if (window.__GZL_INIT__) {
     const mfallback = $("#gzl-fallback");
     const mhtml     = $("#gzl-modal-html");
 
-
     function openForm(url, title){
         const src = toEmbed(url);
         mhtml.style.display = "none";
         mframe.style.display = "block";
         mfallback.style.display = "block";
-
-        // כותרת המודאל
-        $("#gzlModalTitle").textContent = title || CURRENT_STRINGS?.notif_modal_title || "Form";
-
-        // iframe + קישור חלופי
+        $("#gzlModalTitle").textContent = title || "Form";
         mframe.src = src;
         mfallback.href = src;
-
-        // >>> תרגום טקסט כפתור ה-fallback לפי שפה <<<
-        mfallback.textContent = (CURRENT_STRINGS?.open_in_new_tab || "Open in new tab");
-
+        mfallback.textContent = (S.open_in_new_tab || "Open in new tab");
         backdrop.style.display = "flex";
         requestAnimationFrame(()=> modal.classList.add("open"));
         backdrop.setAttribute("aria-hidden","false");
     }
-    function openHtml(title, nodesFactory){
+    function openHtml(title, nodeFactory){
         mframe.src = "about:blank";
         mframe.style.display = "none";
         mfallback.style.display = "none";
         mhtml.innerHTML = "";
-        const node = nodesFactory && nodesFactory();
+        const node = nodeFactory && nodeFactory();
         if (node) mhtml.appendChild(node);
         mhtml.style.display = "block";
         $("#gzlModalTitle").textContent = title || "";
@@ -83,126 +69,143 @@ if (window.__GZL_INIT__) {
     mclose.addEventListener("click", closeForm);
     document.addEventListener("keydown",(e)=>{ if (e.key==="Escape" && backdrop.getAttribute("aria-hidden")==="false") closeForm(); });
 
-    // עוגני טפסים (#headdjobopening, #helpout וכו') — לפי שפה
+    // עוגני מודאל (#headdjobopening / #helpout וכו') — לפי השפה הפעילה בלבד
     document.addEventListener("click",(e)=>{
-        const a = e.target.closest('a[href^="#"]');
-        if (!a) return;
+        const a = e.target.closest('a[href^="#"]'); if (!a) return;
         const key = a.getAttribute("href").slice(1);
-        const lang = CURRENT_STRINGS?.lang || "he";
-        const byLang = (HASH_FORMS_BY_LANG[lang] && HASH_FORMS_BY_LANG[lang][key]);
-        const base   = HASH_FORMS[key];
-        const url    = byLang || base;
+        const url = FORMS[lang]?.[key];
         if (url){
             e.preventDefault();
             openForm(url, a.textContent?.trim() || "Form");
         }
     });
 
-    // כל שאר הטפסים (Google/Airtable/Typeform) — לפתוח במודאל
+    // לפתוח במודאל גם קישורי טפסים חיצוניים
     const FORM_HOSTS_RE = /(forms\.gle|docs\.google\.com\/forms|airtable\.com\/(sh|app)|typeform\.com)/i;
     document.addEventListener("click",(e)=>{
-        const a = e.target.closest("a[href]");
-        if (!a) return;
+        const a = e.target.closest("a[href]"); if (!a) return;
+        if (a.getAttribute("href")?.startsWith("#")) return;
         const url = a.href;
         if (FORM_HOSTS_RE.test(url)){
-            if (a.getAttribute("href")?.startsWith("#")) return; // כבר טופל לעיל
             e.preventDefault();
             openForm(url, a.textContent?.trim() || "Form");
         }
     });
 
-    /* ---------- Tabs ---------- */
+    // ---------- Tabs ----------
     const tabbar = $("#gzl-tabbar");
     const panelsHost = $("#gzl-panels");
-    const registry = new Map();
 
-    TABS.forEach((t)=>{
-        const b = document.createElement("button");
-        b.className = "tab"; b.setAttribute("role","tab"); b.setAttribute("aria-selected","false");
-        b.dataset.key = t.key; b.textContent = t.title; tabbar.appendChild(b);
+    function buildTabs(){
+        tabbar.innerHTML = "";
+        panelsHost.innerHTML = "";
+        registry.clear();
 
-        const p = document.createElement("section");
-        p.className = "panel"; p.id = `panel-${t.key}`; p.setAttribute("role","tabpanel");
-        p.dataset.active = "false"; p.dataset.key = t.key; panelsHost.appendChild(p);
+        TAB_ORDER.forEach((key)=>{
+            const btn = document.createElement("button");
+            btn.className = "tab";
+            btn.setAttribute("role","tab");
+            btn.setAttribute("aria-selected","false");
+            btn.dataset.key = key;
+            btn.textContent = S.tabsTitles[key] || key;
+            tabbar.appendChild(btn);
 
-        registry.set(t.key, { btn:b, panel:p, tab:t });
-    });
+            const panel = document.createElement("section");
+            panel.className = "panel";
+            panel.id = `panel-${key}`;
+            panel.dataset.key = key;
+            panel.dataset.active = "false";
+            panelsHost.appendChild(panel);
 
-    function getEmbedsForTab(key, baseEmbeds){
-        const lang = CURRENT_STRINGS?.lang || "he";
-        const override = EMBED_OVERRIDES[lang]?.[key];
-        return normalizeEmbeds(override || baseEmbeds || []);
+            registry.set(key, { btn, panel });
+        });
     }
 
-    function fillPanel(entry){
-        const { panel, tab } = entry;
-        const key = tab.key;
+    function fillPanel(key){
+        const entry = registry.get(key);
+        if (!entry) return;
+        const { panel } = entry;
         panel.innerHTML = "";
 
-        const ts = CURRENT_STRINGS?.tabs?.[key];
-        const desc = (panel.dataset.l10nDesc || ts?.desc || tab.desc || "");
-        if (desc){
+        // תיאור הכרטיסייה
+        const d = S.tabsDesc[key];
+        if (d){
             const p = document.createElement("p");
-            p.className = "note"; p.textContent = desc; panel.appendChild(p);
+            p.className = "note";
+            p.textContent = d;
+            panel.appendChild(p);
         }
 
-        // פעולות (כפתורי "להוסיף..." וכו') עם תרגום לפי שפה
-        if (tab.actions && tab.actions.length){
+        // כפתורי פעולה (לפי מפתח הכרטיסייה)
+        const ACTIONS_BY_TAB = {
+            jobs:       [{ id: "text16", hash: "#headdjobopening" }],
+            candidates: [{ id: "addcandidate-text", hash: "#addcandidate" }],
+            companies:  [{ id: "addcompany-text", hash: "#addcompany" }],
+            groups:     [{ id: "addlink-text", hash: "#addlink" }],
+            helpers:    [{ id: "helpout-text", hash: "#helpout" }],
+        };
+        const acts = ACTIONS_BY_TAB[key] || [];
+        if (acts.length){
             const wrap = document.createElement("div");
             wrap.className = "actions";
-            tab.actions.forEach((act)=>{
-                const par = document.createElement("p"); if (act.id) par.id = act.id;
-                const a = document.createElement("a"); a.className = "action-btn";
-                a.textContent = CURRENT_STRINGS?.actions?.[act.id] || act.label || "Action";
-                if (act.hash) a.href = act.hash; else if (act.url) a.href = act.url;
-                if (act.url && /^https?:/.test(act.url)) a.target = "_blank";
-                par.appendChild(a); wrap.appendChild(par);
+            acts.forEach(({id,hash})=>{
+                const p = document.createElement("p"); if (id) p.id = id;
+                const a = document.createElement("a");
+                a.className = "action-btn";
+                a.href = hash;
+                a.textContent = (S.actions?.[id] || "Action");
+                p.appendChild(a);
+                wrap.appendChild(p);
             });
             panel.appendChild(wrap);
         }
 
-        const views = getEmbedsForTab(key, tab.embeds);
+        // ה־EMBEDS הקבועים (זה לא משתנה עם השפה)
+        const views = (EMBEDS[key] || []).map(toEmbed);
         if (!views.length) return;
 
         if (views.length === 1){
             const iframe = document.createElement("iframe");
-            iframe.className = "iframe"; iframe.loading="lazy"; iframe.referrerPolicy="no-referrer-when-downgrade";
-            iframe.src = toEmbed(views[0].url);
+            iframe.className = "iframe";
+            iframe.loading = "lazy";
+            iframe.referrerPolicy = "no-referrer-when-downgrade";
+            iframe.src = views[0];
             panel.appendChild(iframe);
 
             const note = document.createElement("p");
             note.className = "note";
             const a = document.createElement("a");
-            a.textContent = CURRENT_STRINGS?.open_in_new_tab || "Open in new tab";
+            a.textContent = (S.open_in_new_tab || "Open in new tab");
             a.href = iframe.src; a.target = "_blank"; a.rel="noopener";
-            note.appendChild(a); panel.appendChild(note);
+            note.appendChild(a);
+            panel.appendChild(note);
         } else {
-            // לדוגמת הווידאו — שני כפתורים "מוארים" כשהנוכחי מודגש
             const bar = document.createElement("div"); bar.className="viewbar";
             const left = document.createElement("div"); left.className="left";
             const right = document.createElement("div"); right.className="right";
             bar.appendChild(left); bar.appendChild(right);
 
             const iframe = document.createElement("iframe");
-            iframe.className="iframe"; iframe.loading="lazy"; iframe.referrerPolicy="no-referrer-when-downgrade";
+            iframe.className="iframe";
+            iframe.loading="lazy";
+            iframe.referrerPolicy = "no-referrer-when-downgrade";
 
             function setView(i){
-                iframe.src = toEmbed(views[i].url);
-                left.querySelectorAll(".viewbtn").forEach((bb,idx)=> bb.setAttribute("aria-pressed", idx===i ? "true":"false"));
+                iframe.src = views[i];
+                left.querySelectorAll(".viewbtn").forEach((b,idx)=> b.setAttribute("aria-pressed", idx===i ? "true":"false"));
                 openNew.href = iframe.src;
             }
-
             views.forEach((v,idx)=>{
-                const btn = document.createElement("button");
-                btn.type="button"; btn.className="viewbtn";
-                btn.textContent = v.label || `View ${idx+1}`;
-                btn.setAttribute("aria-pressed", idx===0 ? "true":"false");
-                btn.addEventListener("click", ()=> setView(idx));
-                left.appendChild(btn);
+                const b = document.createElement("button");
+                b.type="button"; b.className="viewbtn";
+                b.textContent = /drive\.google\.com/.test(v) ? `Video ${idx+1}` : `View ${idx+1}`;
+                b.setAttribute("aria-pressed", idx===0 ? "true" : "false");
+                b.addEventListener("click", ()=> setView(idx));
+                left.appendChild(b);
             });
 
             const openNew = document.createElement("a");
-            openNew.textContent = CURRENT_STRINGS?.open_in_new_tab || "Open in new tab";
+            openNew.textContent = (S.open_in_new_tab || "Open in new tab");
             right.appendChild(openNew);
 
             panel.appendChild(bar);
@@ -216,7 +219,7 @@ if (window.__GZL_INIT__) {
             const on = (k===key);
             entry.btn.setAttribute("aria-selected", on?"true":"false");
             entry.panel.dataset.active = on?"true":"false";
-            if (on) fillPanel(entry);
+            if (on) fillPanel(k);
         });
         const u = new URL(location.href);
         if (key) u.hash = "tab="+key; else u.hash = "";
@@ -234,40 +237,43 @@ if (window.__GZL_INIT__) {
         if (!k || registry.has(k)) setActive(k || null);
     });
 
-    /* ---------- Language ---------- */
+    // ---------- Language ----------
+    function applyLang(){
+        S = STRINGS[lang];
+        document.documentElement.setAttribute("lang", S.lang || "he");
 
-    function setLang(lang){
-        const L = STRINGS[lang] || STRINGS.he;
-        CURRENT_STRINGS = L;
+        $("#gzl-hero h1").textContent = S.hero_h1;
+        $("#gzl-hero p").textContent  = S.hero_p;
 
-        // משנים את שפת הדוק, לא את הכיוון (כדי שהלייאאוט לא "יקפוץ")
-        document.documentElement.setAttribute("lang", L.lang);
-
-        // גיבור
-        $("#gzl-hero h1").textContent = L.hero_h1;
-        $("#gzl-hero p").textContent  = L.hero_p;
         const ctas = $$("#gzl-hero .cta a");
-        ctas[0] && (ctas[0].textContent = L.cta_find);
-        ctas[1] && (ctas[1].textContent = L.cta_notif);
-        ctas[2] && (ctas[2].textContent = L.cta_cv);
+        ctas[0] && (ctas[0].textContent = S.cta_find);
+        ctas[1] && (ctas[1].textContent = S.cta_notif);
+        ctas[2] && (ctas[2].textContent = S.cta_cv);
 
-        // >>> לעדכן גם את כיתוב "פתח/י בטאב חדש" במודאל אם הוא פתוח <<<
-        if (mfallback) mfallback.textContent = (L.open_in_new_tab || "Open in new tab");
+        $("#gzl-lang").textContent = (lang==="he" ? "EN" : "HE");
 
-        // טאבים: כותרות + תיאור + רענון הפאנל הפעיל כדי שייטען אמבד לשפה
-        registry.forEach((entry,key)=>{
-            const t = L.tabs[key];
-            if (t) entry.btn.textContent = t.title;
-            entry.panel.dataset.l10nDesc = t ? t.desc : "";
-            if (entry.panel.dataset.active==="true") fillPanel(entry); // רענון הפאנל הנוכחי
+        // בונים את הכרטיסיות מחדש עם התוויות/תיאורים בשפה — אבל האמבד נשאר אותו דבר
+        tabbar.innerHTML = ""; panelsHost.innerHTML = ""; registry.clear();
+        TAB_ORDER.forEach((key)=>{
+            const btn = document.createElement("button");
+            btn.className = "tab"; btn.setAttribute("role","tab"); btn.dataset.key = key;
+            btn.textContent = S.tabsTitles[key] || key;
+            btn.setAttribute("aria-selected","false");
+            tabbar.appendChild(btn);
+
+            const panel = document.createElement("section");
+            panel.className = "panel"; panel.id = `panel-${key}`;
+            panel.dataset.key = key; panel.dataset.active = "false";
+            panelsHost.appendChild(panel);
+
+            registry.set(key, { btn, panel });
         });
 
-        // מתג שפה
-        $("#gzl-lang").textContent = lang==="he" ? "EN" : "HE";
-        localStorage.setItem("gzl_lang", lang);
+        // לעדכן טקסט fallback במודאל אם פתוח
+        if (mfallback) mfallback.textContent = (S.open_in_new_tab || "Open in new tab");
     }
 
-    function langInit(){
+    function initLang(){
         const qs = new URLSearchParams(location.search);
         const lg = qs.get("lang");
         if (lg) return lg.toLowerCase().startsWith("en") ? "en" : "he";
@@ -275,31 +281,25 @@ if (window.__GZL_INIT__) {
     }
 
     $("#gzl-lang")?.addEventListener("click", ()=>{
-        const cur = document.documentElement.getAttribute("lang")==="en" ? "en" : "he";
-        setLang(cur==="he" ? "en" : "he");
+        const active = ([...registry.keys()].find(k => registry.get(k).panel.dataset.active==="true")) || TAB_ORDER[TAB_ORDER.length-1];
+        lang = (lang==="he" ? "en" : "he");
+        localStorage.setItem("gzl_lang", lang);
+        applyLang();
+        setActive(active); // משמרים את אותה כרטיסייה
     });
 
-    // כפתור הנוטיפיקציות (מודאל עם כל קבוצות הטלגרם)
+    // ---------- Init ----------
+    applyLang();
+    const start = (location.hash.match(/tab=([a-z]+)/i) || [])[1] || TAB_ORDER[TAB_ORDER.length-1];
+    setActive(start);
+
+    // CTA של נוטיפיקציות — כרגע מודאל טקסט פשוט (נוסיף רשימות טלגרם כשנרצה)
     $("#gzl-notif-cta")?.addEventListener("click",(e)=>{
         e.preventDefault();
-        const L = CURRENT_STRINGS;
-        openHtml(L.notif_modal_title, ()=>{
-            const wrap = document.createElement("div");
-            (L.notif_sections||[]).forEach((sec)=>{
-                const h = document.createElement("h4"); h.textContent = sec.title; wrap.appendChild(h);
-                const chips = document.createElement("div"); chips.className = "chips";
-                sec.items.forEach((it)=>{
-                    const a = document.createElement("a"); a.href = it.url; a.target="_blank"; a.rel="noopener"; a.textContent = it.label;
-                    chips.appendChild(a);
-                });
-                wrap.appendChild(chips);
-            });
-            return wrap;
+        openHtml(S.cta_notif, ()=> {
+            const d = document.createElement("div");
+            d.innerHTML = `<p>${S.cta_notif}</p>`;
+            return d;
         });
     });
-
-    // Start
-    setLang(langInit());
-    const start = (location.hash.match(/tab=([a-z]+)/i) || [])[1];
-    setActive(start && registry.has(start) ? start : "jobs");
 }
